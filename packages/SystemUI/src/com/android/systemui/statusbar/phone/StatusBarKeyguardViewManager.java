@@ -91,7 +91,6 @@ public class StatusBarKeyguardViewManager {
         mContainer = container;
         mStatusBarWindowManager = statusBarWindowManager;
         mScrimController = scrimController;
-        if (mBouncer != null) mBouncer.removeView();
         mBouncer = new KeyguardBouncer(mContext, mViewMediatorCallback, mLockPatternUtils,
                 mStatusBarWindowManager, container);
     }

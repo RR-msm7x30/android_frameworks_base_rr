@@ -179,7 +179,7 @@ public class KeyguardBouncer {
         mRoot.setSystemUiVisibility(View.STATUS_BAR_DISABLE_HOME);
     }
 
-    void removeView() {
+    private void removeView() {
         if (mRoot != null && mRoot.getParent() == mContainer) {
             mContainer.removeView(mRoot);
             mRoot = null;

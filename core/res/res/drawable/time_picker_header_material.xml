@@ -17,6 +17,6 @@
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="?attr/colorControlHighlight">
     <item>
-        <color android:color="?attr/colorAccent" />
+        <color android:color="@color/material_blue_900" />
     </item>
 </ripple>
