@@ -40,7 +40,7 @@
                 </item>
                 <item>
                     <nine-patch android:src="@drawable/scrubber_primary_mtrl_alpha"
-                                android:tint="@color/material_blue_900" />
+                                android:tint="?attr/colorControlActivated" />
                 </item>
             </selector>
         </scale>

@@ -16,4 +16,4 @@
 
 <nine-patch xmlns:android="http://schemas.android.com/apk/res/android"
     android:src="@drawable/text_cursor_mtrl_alpha"
-    android:tint="@color/material_blue_900" />
+    android:tint="?attr/colorControlActivated" />

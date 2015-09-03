@@ -21,6 +21,6 @@
     </item>
     <item>
         <bitmap android:src="@drawable/scrubber_control_on_mtrl_alpha"
-            android:tint="@color/material_blue_900" />
+            android:tint="?attr/colorControlActivated" />
     </item>
 </selector>
