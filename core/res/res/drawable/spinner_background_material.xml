@@ -27,6 +27,6 @@
     </item>
     <item>
         <nine-patch android:src="@drawable/spinner_mtrl_am_alpha"
-            android:tint="?attr/colorControlActivated" />
+            android:tint="@color/material_blue_900" />
     </item>
 </selector>
