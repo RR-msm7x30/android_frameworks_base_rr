@@ -144,6 +144,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
     // The current user ID.
     private int mCurrentUserId;
 
+    private boolean mShowIndicators = false;
+
     /**
      * Construct this controller object and register for updates.
      */
@@ -671,6 +673,13 @@ public class NetworkControllerImpl extends BroadcastReceiver
         }
     }
 
+    public void setShowIndicators(boolean value) {
+        mWifiSignalController.setShowIndicators(value);
+        for (MobileSignalController controller : mMobileSignalControllers.values()) {
+            controller.setShowIndicators(value);
+        }
+    }
+
     private boolean isMobileDataConnected() {
         MobileSignalController controller = getDataController();
         return controller != null ? controller.getState().dataConnected : false;
@@ -851,7 +860,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
             Handler handler = new WifiHandler();
             mWifiChannel = new AsyncChannel();
             Messenger wifiMessenger = mWifiManager.getWifiServiceMessenger();
-            if (wifiMessenger != null) {
+            if (wifiMessenger != null &&
+                    context.getResources().getBoolean(com.android.internal.R.bool.config_showWifiActivityIndicators)) {
                 mWifiChannel.connect(context, handler, wifiMessenger);
             }
             // WiFi only has one state.
@@ -1132,12 +1142,16 @@ public class NetworkControllerImpl extends BroadcastReceiver
          * Start listening for phone state changes.
          */
         public void registerListener() {
-            mPhone.listen(mPhoneStateListener,
-                    PhoneStateListener.LISTEN_SERVICE_STATE
-                            | PhoneStateListener.LISTEN_SIGNAL_STRENGTHS
-                            | PhoneStateListener.LISTEN_CALL_STATE
-                            | PhoneStateListener.LISTEN_DATA_CONNECTION_STATE
-                            | PhoneStateListener.LISTEN_DATA_ACTIVITY);
+            int eventMask = PhoneStateListener.LISTEN_SERVICE_STATE |
+                PhoneStateListener.LISTEN_SIGNAL_STRENGTHS |
+                PhoneStateListener.LISTEN_CALL_STATE |
+                PhoneStateListener.LISTEN_DATA_CONNECTION_STATE;
+
+            if (mContext.getResources().getBoolean(com.android.internal.R.bool.config_showDataActivityIndicators)) {
+                eventMask = eventMask | PhoneStateListener.LISTEN_DATA_ACTIVITY;
+            }
+
+            mPhone.listen(mPhoneStateListener, eventMask);
         }
 
         /**
@@ -1531,6 +1545,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
         private final State[] mHistory;
         // Where to copy the next state into.
         private int mHistoryIndex;
+        private boolean mShowIndicators = false;
 
         public SignalController(String tag, Context context, int type,
                 List<NetworkSignalChangedCallback> signalCallbacks,
@@ -1626,7 +1641,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
         }
 
         public int getActivityIconId(boolean connected) {
-            if (connected) {
+            if (connected && mShowIndicators) {
                 if (mCurrentState.activityIn && mCurrentState.activityOut) {
                     return R.drawable.stat_sys_signal_inout;
                 } else if (mCurrentState.activityIn) {
@@ -1636,6 +1651,10 @@ public class NetworkControllerImpl extends BroadcastReceiver
                 }
             }
             return R.drawable.stat_sys_signal_none;
+        }
+
+        public void setShowIndicators(boolean value) {
+            mShowIndicators = value;
         }
 
         /**

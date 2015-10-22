@@ -27,11 +27,6 @@
     
     <!-- label for item that screenshots in phone options dialog -->
     <string name="global_action_screenshot">Screenshot</string>
-    <!-- label for item that screenrecord in phone options dialog -->
-    <string name="global_action_screenrecord">Screenrecord</string>
-
-    <!-- label for item that torch in power menu options dialog -->
-    <string name="global_action_torch">Flashlight</string>
 
     <!-- Title of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
     <string name="permlab_receiveProtectedSms">receive protected SMS</string>
@@ -105,8 +100,7 @@
     <string name="reboot_download">Download</string>
     <!-- Button to soft reboot the device, within the Reboot Options dialog -->
     <string name="reboot_soft">Soft reboot</string>
-    <!-- Button to soft reboot the device, within the Reboot Options dialog -->
-    <string name="reboot_systemui">Restart SystemUI</string>
+
 
     <!-- Title of dialog to confirm rebooting. -->
     <string name="reboot_title">Reboot</string>
@@ -357,4 +351,16 @@
     <!-- [CHAR LIMIT=NONE] Description of an application permission, listed so the user can choose
          whether they want to allow the application to do this. -->
     <string name="permdesc_resetBatteryStats">Allows an application to reset the current low-level battery usage data.</string>
+
+    <!-- Wifi Hotspot disabled due to subscription change -->
+    <string name="subscription_change_disabled_wifi_ap">Disabled Wi-Fi hotspot due to SIM subscription change</string>
+
+    <!-- WiFi turn off notification action text -->
+    <string name="notify_turn_wifi_off_title">Turn Wi-Fi off</string>
+
+    <!-- Third party keyguard permission label -->
+    <string name="permlab_thirdPartyKeyguard">third party lock screen</string>
+    <!-- Third party keyguard permission description -->
+    <string name="permdesc_thirdPartyKeyguard">Allows an app to be used as an insecure lock screen.</string>
+
 </resources>

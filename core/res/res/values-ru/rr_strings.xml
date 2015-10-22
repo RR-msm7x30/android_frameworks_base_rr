@@ -38,6 +38,9 @@
     <string name="animation_grow_shrink_right">Увеличение (справа)</string>
     <string name="action_null">Пустой</string>
 
+    <!-- Error description on theme switch with ligtsensor mode enabled -->
+    <string name="theme_auto_switch_mode_error">Включен режим автоматической смены темы при изменении освещённости. Ручное переключение невозможно.</string>
+
     <!-- status message in phone options dialog for when pie is on -->
     <string name="global_actions_pie_mode_on_status">Pie включен</string>
 
@@ -68,6 +71,9 @@
     <string name="setting_confirmation_yes">Да</string>
     <string name="setting_confirmation_no">Нет</string>
 
+    <!-- Button to soft reboot the device, within the Reboot Options dialog -->
+    <string name="reboot_systemui">Перезапуск интерфейса</string>
+
     <!-- label for item that screenrecord in phone options dialog -->
     <string name="global_action_screenrecord">Запись экрана</string>
 
@@ -78,5 +84,8 @@
     <string name="resurrection_start_title">Выполняется обновление\u2026</string>
     <!-- [CHAR LIMIT=40] Title of dialog that is shown when performing a system upgrade. -->
     <string name="resurrection_upgrading_title">Оптимизация Resurrection\u2026</string>
+
+    <!-- label for item that takes On-The-Go in the phone options dialog -->
+    <string name="global_action_onthego">Режим \"На ходу\"</string>
 
 </resources>

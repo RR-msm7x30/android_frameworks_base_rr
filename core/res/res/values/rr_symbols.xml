@@ -62,7 +62,12 @@
   <java-symbol type="anim" name="slide_out_right_no_fade" />
   <!-- Hardware keys on/off option -->
   <java-symbol type="bool" name="config_hwKeysPref" />
-  <!-- global actions -->
+  
+  <!-- UI theme mode -->
+  <java-symbol type="integer" name="config_uiThemeMode" />
+  <java-symbol type="string" name="theme_auto_switch_mode_error" />
+
+  <!-- Global actions -->
   <java-symbol type="id" name="option4" />
   <java-symbol type="id" name="option5" />
   <!-- Doze mode -->
@@ -122,5 +127,9 @@
   <java-symbol type="string" name="setting_confirmation_ask_me_later" />
   <java-symbol type="string" name="setting_confirmation_yes" />
   <java-symbol type="string" name="setting_confirmation_no" />
+
+  <!-- On-The-Go -->
+  <java-symbol type="string" name="global_action_onthego" />
+  <java-symbol type="drawable" name="ic_lock_onthego" />
 
 </resources>

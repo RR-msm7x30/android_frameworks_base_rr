@@ -1727,24 +1727,26 @@ ResourceTable::ResourceTable(Bundle* bundle, const String16& assetsPackage, Reso
     , mNumLocal(0)
     , mBundle(bundle)
 {
-    ssize_t packageId = -1;
-    switch (mPackageType) {
-        case App:
-        case AppFeature:
-            packageId = 0x7f;
-            break;
+    ssize_t packageId = mBundle->getForcedPackageId();
+    if (packageId == -1) {
+        switch (mPackageType) {
+            case App:
+            case AppFeature:
+                packageId = 0x7f;
+                break;
 
-        case System:
-            packageId = 0x01;
-            break;
+            case System:
+                packageId = 0x01;
+                break;
 
-        case SharedLibrary:
-            packageId = 0x00;
-            break;
+            case SharedLibrary:
+                packageId = 0x00;
+                break;
 
-        default:
-            assert(0);
-            break;
+            default:
+                assert(0);
+                break;
+        }
     }
 
     if (pkgIdOverride != 0) {
@@ -3029,7 +3031,6 @@ status_t ResourceTable::flatten(Bundle* bundle, const sp<const ResourceFilter>& 
                 continue;
             }
 
-
             // We need to write one type chunk for each configuration for
             // which we have entries in this type.
             const SortedVector<ConfigDescription> uniqueConfigs(t->getUniqueConfigs());
@@ -3040,9 +3041,8 @@ status_t ResourceTable::flatten(Bundle* bundle, const sp<const ResourceFilter>& 
             for (size_t ci=0; ci<NC; ci++) {
                 const ConfigDescription& config = uniqueConfigs[ci];
 
-
                 NOISY(printf("Writing config %d config: imsi:%d/%d lang:%c%c cnt:%c%c "
-                     "orien:%d ui:%d touch:%d density:%d key:%d inp:%d nav:%d sz:%dx%d "
+                     "orien:%d uiTheme:%d ui:%d touch:%d density:%d key:%d inp:%d nav:%d sz:%dx%d "
                      "sw%ddp w%ddp h%ddp dir:%d\n",
                       ti+1,
                       config.mcc, config.mnc,
@@ -3051,6 +3051,7 @@ status_t ResourceTable::flatten(Bundle* bundle, const sp<const ResourceFilter>& 
                       config.country[0] ? config.country[0] : '-',
                       config.country[1] ? config.country[1] : '-',
                       config.orientation,
+                      config.uiThemeMode,
                       config.uiMode,
                       config.touchscreen,
                       config.density,
@@ -3085,7 +3086,7 @@ status_t ResourceTable::flatten(Bundle* bundle, const sp<const ResourceFilter>& 
                 tHeader->entriesStart = htodl(typeSize);
                 tHeader->config = config;
                 NOISY(printf("Writing type %d config: imsi:%d/%d lang:%c%c cnt:%c%c "
-                     "orien:%d ui:%d touch:%d density:%d key:%d inp:%d nav:%d sz:%dx%d "
+                     "orien:%d uiTheme:%d ui:%d touch:%d density:%d key:%d inp:%d nav:%d sz:%dx%d "
                      "sw%ddp w%ddp h%ddp dir:%d\n",
                       ti+1,
                       tHeader->config.mcc, tHeader->config.mnc,
@@ -3094,6 +3095,7 @@ status_t ResourceTable::flatten(Bundle* bundle, const sp<const ResourceFilter>& 
                       tHeader->config.country[0] ? tHeader->config.country[0] : '-',
                       tHeader->config.country[1] ? tHeader->config.country[1] : '-',
                       tHeader->config.orientation,
+                      tHeader->config.uiThemeMode,
                       tHeader->config.uiMode,
                       tHeader->config.touchscreen,
                       tHeader->config.density,

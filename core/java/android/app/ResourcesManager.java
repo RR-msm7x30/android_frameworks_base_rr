@@ -176,9 +176,8 @@ public class ResourcesManager {
             Configuration overrideConfiguration, CompatibilityInfo compatInfo, IBinder token,
             Context context, boolean isThemeable) {
         final float scale = compatInfo.applicationScale;
-        final ThemeConfig themeConfig = getThemeConfig();
         ResourcesKey key = new ResourcesKey(resDir, displayId, overrideConfiguration, scale,
-                isThemeable, themeConfig, token);
+                isThemeable, getThemeConfig(), token);
         Resources r;
         synchronized (this) {
             // Resources is app scale dependent.
@@ -308,9 +307,30 @@ public class ResourcesManager {
      * @hide
      */
     public Resources getTopLevelThemedResources(String resDir, int displayId, String packageName,
-            String themePackageName, CompatibilityInfo compatInfo, IBinder token,
-            boolean isThemeable) {
+            String themePackageName, Configuration overrideConfiguration,
+            CompatibilityInfo compatInfo, IBinder token, boolean isThemeable) {
         Resources r;
+
+        ThemeConfig.Builder builder = new ThemeConfig.Builder();
+        builder.defaultOverlay(themePackageName);
+        builder.defaultIcon(themePackageName);
+        builder.defaultFont(themePackageName);
+        ThemeConfig themeConfig = builder.build();
+
+        ResourcesKey key = new ResourcesKey(resDir, displayId, overrideConfiguration,
+                compatInfo.applicationScale, isThemeable, themeConfig, token);
+
+        synchronized (this) {
+            WeakReference<Resources> wr = mActiveResources.get(key);
+            r = wr != null ? wr.get() : null;
+            if (r != null && r.getAssets().isUpToDate()) {
+                if (false) {
+                    Slog.w(TAG, "Returning cached resources " + r + " " + resDir
+                            + ": appScale=" + r.getCompatibilityInfo().applicationScale);
+                }
+                return r;
+            }
+        }
 
         AssetManager assets = new AssetManager();
         assets.setAppName(packageName);
@@ -323,9 +343,15 @@ public class ResourcesManager {
         DisplayMetrics dm = getDisplayMetricsLocked(displayId);
         Configuration config;
         boolean isDefaultDisplay = (displayId == Display.DEFAULT_DISPLAY);
-        if (!isDefaultDisplay) {
+        final boolean hasOverrideConfig = key.hasOverrideConfiguration();
+        if (!isDefaultDisplay || hasOverrideConfig) {
             config = new Configuration(getConfiguration());
-            applyNonDefaultDisplayMetricsToConfigurationLocked(dm, config);
+            if (!isDefaultDisplay) {
+                applyNonDefaultDisplayMetricsToConfigurationLocked(dm, config);
+            }
+            if (hasOverrideConfig) {
+                config.updateFrom(key.mOverrideConfiguration);
+            }
         } else {
             config = getConfiguration();
         }
@@ -333,12 +359,6 @@ public class ResourcesManager {
         boolean iconsAttached = false;
         if (isThemeable) {
             /* Attach theme information to the resulting AssetManager when appropriate. */
-            ThemeConfig.Builder builder = new ThemeConfig.Builder();
-            builder.defaultOverlay(themePackageName);
-            builder.defaultIcon(themePackageName);
-            builder.defaultFont(themePackageName);
-
-            ThemeConfig themeConfig = builder.build();
             attachThemeAssets(assets, themeConfig);
             attachCommonAssets(assets, themeConfig);
             iconsAttached = attachIconAssets(assets, themeConfig);
@@ -346,7 +366,26 @@ public class ResourcesManager {
         r = new Resources(assets, dm, config, compatInfo, token);
         if (iconsAttached) setActivityIcons(r);
 
-        return r;
+        if (false) {
+            Slog.i(TAG, "Created THEMED app resources " + resDir + " " + r + ": "
+                    + r.getConfiguration() + " appScale="
+                    + r.getCompatibilityInfo().applicationScale);
+        }
+
+        synchronized (this) {
+            WeakReference<Resources> wr = mActiveResources.get(key);
+            Resources existing = wr != null ? wr.get() : null;
+            if (existing != null && existing.getAssets().isUpToDate()) {
+                // Someone else already created the resources while we were
+                // unlocked; go ahead and use theirs.
+                r.getAssets().close();
+                return existing;
+            }
+
+            // XXX need to remove entries when weak references go away
+            mActiveResources.put(key, new WeakReference<Resources>(r));
+            return r;
+        }
     }
 
     /**
@@ -453,6 +492,7 @@ public class ResourcesManager {
                 DisplayMetrics dm = defaultDisplayMetrics;
                 final boolean hasOverrideConfiguration = key.hasOverrideConfiguration();
                 boolean themeChanged = (changes & ActivityInfo.CONFIG_THEME_RESOURCE) != 0;
+                final boolean themeChanged2 = (changes & ActivityInfo.CONFIG_UI_THEME_MODE) != 0;
                 if (themeChanged) {
                     AssetManager am = r.getAssets();
                     if (am.hasThemeSupport()) {
@@ -484,7 +524,7 @@ public class ResourcesManager {
                 } else {
                     r.updateConfiguration(config, dm, compat);
                 }
-                if (themeChanged) {
+                if (themeChanged || themeChanged2) {
                     r.updateStringCache();
                 }
                 //Slog.i(TAG, "Updated app resources " + v.getKey()

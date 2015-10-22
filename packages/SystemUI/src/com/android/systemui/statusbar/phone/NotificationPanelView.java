@@ -221,6 +221,7 @@ public class NotificationPanelView extends PanelView implements
 
     // Task manager
     private boolean mShowTaskManager;
+    private boolean mTaskManagerShowing;
     private LinearLayout mTaskManagerPanel;
 
     public NotificationPanelView(Context context, AttributeSet attrs) {
@@ -253,29 +254,14 @@ public class NotificationPanelView extends PanelView implements
         mKeyguardStatusView = (KeyguardStatusView) findViewById(R.id.keyguard_status_view);
         mQsContainer = (QSContainer) findViewById(R.id.quick_settings_container);
         mQsPanel = (QSPanel) findViewById(R.id.quick_settings_panel);
-        mQsPanel.setDetailCallback(new QSPanel.DetailCallback() {
-            @Override
-            public void onDetailChanged(boolean showing) {
-                mQsPanel.setTopOfContainer(mQsContainer.getTop());
-                mQsPanel.setDetailOffset(mScrollView.getScrollY());
-                if (!showing) {
-                    mHandler.removeCallbacks(mCloseQsRunnable);
-                }
-            }
-        });
         mTaskManagerPanel = (LinearLayout) findViewById(R.id.task_manager_panel);
         mClockView = (TextView) findViewById(R.id.clock_view);
         mScrollView = (ObservableScrollView) findViewById(R.id.scroll_view);
-        mScrollView.setListener(this);
         mScrollView.setFocusable(false);
         mReserveNotificationSpace = findViewById(R.id.reserve_notification_space);
         mNotificationContainerParent = findViewById(R.id.notification_container_parent);
         mNotificationStackScroller = (NotificationStackScrollLayout)
                 findViewById(R.id.notification_stack_scroller);
-        mNotificationStackScroller.setOnHeightChangedListener(this);
-        mNotificationStackScroller.setOverscrollTopChangedListener(this);
-        mNotificationStackScroller.setOnEmptySpaceClickListener(this);
-        mNotificationStackScroller.setScrollView(mScrollView);
         mFastOutSlowInInterpolator = AnimationUtils.loadInterpolator(getContext(),
                 android.R.interpolator.fast_out_slow_in);
         mFastOutLinearInterpolator = AnimationUtils.loadInterpolator(getContext(),
@@ -398,6 +384,29 @@ public class NotificationPanelView extends PanelView implements
         mSecureCameraLaunchManager.create();
         mSettingsObserver.observe();
         KeyguardUpdateMonitor.getInstance(mContext).registerCallback(mInfoCallback);
+
+        mNotificationStackScroller.setOnHeightChangedListener(this);
+        mNotificationStackScroller.setOverscrollTopChangedListener(this);
+        mNotificationStackScroller.setOnEmptySpaceClickListener(this);
+        mNotificationStackScroller.setScrollView(mScrollView);
+
+        mScrollView.setListener(this);
+
+        mQsPanel.setDetailCallback(new QSPanel.DetailCallback() {
+            @Override
+            public void onDetailChanged(boolean showing) {
+                mQsPanel.setTopOfContainer(mQsContainer.getTop());
+                mQsPanel.setDetailOffset(mScrollView.getScrollY());
+                if (!showing) {
+                    mHandler.removeCallbacks(mCloseQsRunnable);
+                }
+                // if TaskManager is showing reset back to QSPanel
+                // otherwise multiuser switch will not work.
+                if (mTaskManagerShowing) {
+                    resetQsPanelVisibility();
+                }
+            }
+        });
     }
 
     @Override
@@ -406,6 +415,15 @@ public class NotificationPanelView extends PanelView implements
         mSecureCameraLaunchManager.destroy();
         mSettingsObserver.unobserve();
         KeyguardUpdateMonitor.getInstance(mContext).removeCallback(mInfoCallback);
+
+        mNotificationStackScroller.setOnHeightChangedListener(null);
+        mNotificationStackScroller.setOverscrollTopChangedListener(null);
+        mNotificationStackScroller.setOnEmptySpaceClickListener(null);
+        mNotificationStackScroller.setScrollView(null);
+
+        mScrollView.setListener(null);
+
+        mQsPanel.setDetailCallback(null);
     }
 
     private void startQsSizeChangeAnimation(int oldHeight, final int newHeight) {
@@ -1431,13 +1449,25 @@ public class NotificationPanelView extends PanelView implements
         }
     }
 
-    public void setTaskManagerVisibility(boolean mTaskManagerShowing) {
+    void setTaskManagerEnabled(boolean enabled) {
+        mShowTaskManager = enabled;
+        // explicity restore visibility states when disabled
+        // and TaskManager last state was showing
+        if (!enabled && mTaskManagerShowing) {
+            mTaskManagerShowing = false;
+            mQsPanel.setVisibility(View.VISIBLE);
+            mTaskManagerPanel.setVisibility(View.GONE);
+        }
+    }
+
+    public void setTaskManagerVisibility(boolean taskManagerShowing) {
         if (mShowTaskManager) {
+            mTaskManagerShowing = taskManagerShowing;
             cancelAnimation();
             boolean expandVisually = mQsExpanded || mStackScrollerOverscrolling;
-            mQsPanel.setVisibility(expandVisually && !mTaskManagerShowing
+            mQsPanel.setVisibility(expandVisually && !taskManagerShowing
                     ? View.VISIBLE : View.GONE);
-            mTaskManagerPanel.setVisibility(expandVisually && mTaskManagerShowing
+            mTaskManagerPanel.setVisibility(expandVisually && taskManagerShowing
                     && !mKeyguardShowing ? View.VISIBLE : View.GONE);
         }
     }
@@ -1678,7 +1708,7 @@ public class NotificationPanelView extends PanelView implements
                 * mKeyguardStatusBarAnimateAlpha);
         float alphaBottomArea = Math.min(1 - getQsExpansionFraction(), alphaNotifications);
         mKeyguardBottomArea.setAlpha(alphaBottomArea);
-        mStatusBar.setVisualizerAlpha(alphaBottomArea);
+        mStatusBar.getVisualizer().setAlpha(alphaBottomArea);
         setQsTranslation(mQsExpansionHeight);
     }
 
@@ -1813,7 +1843,9 @@ public class NotificationPanelView extends PanelView implements
         if (mQsExpanded) {
             if (isQsDetailShowing()) {
                 mHandler.removeCallbacks(mCloseQsRunnable);
-                mHandler.postDelayed(mCloseQsRunnable, 200);
+                // temp fix for QSPanel closing when switching
+                // to TaskManager while in detail view
+                //mHandler.postDelayed(mCloseQsRunnable, 200);
             }
             requestScrollerTopPaddingUpdate(false /* animate */);
             requestPanelHeightUpdate();
@@ -2176,8 +2208,6 @@ public class NotificationPanelView extends PanelView implements
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.QS_TRANSPARENT_SHADE), false, this);
             resolver.registerContentObserver(Settings.System.getUriFor(
-                    Settings.System.ENABLE_TASK_MANAGER), false, this, UserHandle.USER_ALL);
-            resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.DOUBLE_TAP_SLEEP_ANYWHERE), false, this, UserHandle.USER_ALL);
             update();
         }
@@ -2230,8 +2260,6 @@ public class NotificationPanelView extends PanelView implements
             mStatusBarLockedOnSecureKeyguard = Settings.Secure.getIntForUser(
                     resolver, Settings.Secure.STATUS_BAR_LOCKED_ON_SECURE_KEYGUARD, 1,
                     UserHandle.USER_CURRENT) == 1;
-            mShowTaskManager = Settings.System.getIntForUser(resolver,
-                    Settings.System.ENABLE_TASK_MANAGER, 0, UserHandle.USER_CURRENT) == 1;
             mQsSmartPullDown = Settings.System.getIntForUser(
                     resolver, Settings.System.QS_SMART_PULLDOWN, 0,
                     UserHandle.USER_CURRENT);
@@ -2276,8 +2304,8 @@ public class NotificationPanelView extends PanelView implements
 
     private KeyguardUpdateMonitorCallback mInfoCallback = new KeyguardUpdateMonitorCallback() {
         @Override
-        public void onFingerprintAttemptFailed() {
-            if (!mStatusBar.isBouncerShowing()) {
+        public void onFingerprintAttemptFailed(boolean error, int errorCode) {
+            if (!error && !mStatusBar.isBouncerShowing() && mStatusBar.isScreenOnFromKeyguard()) {
                 NotificationPanelView.super.startHintAnimation(true /* fingerprintHint */);
             }
         }

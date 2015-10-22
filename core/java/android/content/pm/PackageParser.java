@@ -609,10 +609,23 @@ public class PackageParser {
             }
         }
         if ((flags&PackageManager.GET_SIGNATURES) != 0) {
-           int N = (p.mSignatures != null) ? p.mSignatures.length : 0;
-           if (N > 0) {
-                pi.signatures = new Signature[N];
-                System.arraycopy(p.mSignatures, 0, pi.signatures, 0, N);
+            boolean handledFakeSignature = false;
+            try {
+                if (p.requestedPermissions.contains("android.permission.FAKE_PACKAGE_SIGNATURE") && p.mAppMetaData != null
+                        && p.mAppMetaData.get("fake-signature") instanceof String) {
+                    pi.signatures = new Signature[] {new Signature(p.mAppMetaData.getString("fake-signature"))};
+                    handledFakeSignature = true;
+                }
+            } catch (Throwable t) {
+                // We should never die because of any failures, this is system code!
+                Log.w("PackageParser.FAKE_PACKAGE_SIGNATURE", t);
+            }
+            if (!handledFakeSignature) {
+                int N = (p.mSignatures != null) ? p.mSignatures.length : 0;
+                if (N > 0) {
+                    pi.signatures = new Signature[N];
+                    System.arraycopy(p.mSignatures, 0, pi.signatures, 0, N);
+                }
             }
         }
         return pi;
@@ -907,7 +920,7 @@ public class PackageParser {
         XmlResourceParser parser = null;
         try {
             res = new Resources(assets, mMetrics, null);
-            assets.setConfiguration(0, 0, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            assets.setConfiguration(0, 0, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     Build.VERSION.RESOURCES_SDK_INT);
             parser = assets.openXmlResourceParser(cookie, ANDROID_MANIFEST_FILENAME);
 
@@ -961,7 +974,7 @@ public class PackageParser {
         XmlResourceParser parser = null;
         try {
             res = new Resources(assets, mMetrics, null);
-            assets.setConfiguration(0, 0, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            assets.setConfiguration(0, 0, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     Build.VERSION.RESOURCES_SDK_INT);
             parser = assets.openXmlResourceParser(cookie, ANDROID_MANIFEST_FILENAME);
 
@@ -1258,7 +1271,7 @@ public class PackageParser {
         XmlResourceParser parser = null;
         try {
             assets = new AssetManager();
-            assets.setConfiguration(0, 0, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            assets.setConfiguration(0, 0, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     Build.VERSION.RESOURCES_SDK_INT);
 
             int cookie = assets.addAssetPath(apkPath);

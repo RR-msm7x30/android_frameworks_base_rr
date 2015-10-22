@@ -39,6 +39,9 @@
     <string name="action_null">Blank</string>
 
 
+    <!-- Error description on theme switch with ligtsensor mode enabled -->
+    <string name="theme_auto_switch_mode_error">Automatic light condition change mode is enabled. Manual switching is not possible.</string>
+
     <!-- status message in phone options dialog for when pie is on -->
     <string name="global_actions_pie_mode_on_status">SlimPie is ON</string>
 
@@ -68,6 +71,20 @@
     <string name="setting_confirmation_ask_me_later">Ask later</string>
     <string name="setting_confirmation_yes">Yes</string>
     <string name="setting_confirmation_no">No</string>
+
+    <!-- Button to soft reboot the device, within the Reboot Options dialog -->
+    <string name="reboot_systemui">Restart SystemUI</string>
+
+    <!-- label for item that screenrecord in phone options dialog -->
+    <string name="global_action_screenrecord">Screenrecord</string>
+
+    <!-- label for item that torch in power menu options dialog -->
+    <string name="global_action_torch">Flashlight</string>    
+
     <!-- [CHAR LIMIT=40] Title of dialog that is shown when system is starting. -->
     <string name="resurrection_start_title">Upgrade in Progress\u2026</string>
+
+    <!-- label for item that takes On-The-Go in the phone options dialog -->
+    <string name="global_action_onthego">On-The-Go Mode</string>
+
 </resources>

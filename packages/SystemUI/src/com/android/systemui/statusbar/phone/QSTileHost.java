@@ -80,6 +80,7 @@ import com.android.systemui.qs.tiles.AppCircleBarTile;
 import com.android.systemui.qs.tiles.SlimFloatsTile;
 import com.android.systemui.qs.tiles.WifiTile;
 import com.android.systemui.qs.tiles.SlimActionTile;
+import com.android.systemui.qs.tiles.TrdsTile;
 import com.android.systemui.qs.tiles.ThemesTile;
 import com.android.systemui.settings.CurrentUserTracker;
 import com.android.systemui.statusbar.CustomTileData;
@@ -97,6 +98,7 @@ import com.android.systemui.volume.VolumeComponent;
 
 import cyanogenmod.app.CustomTileListenerService;
 import cyanogenmod.app.StatusBarPanelCustomTile;
+import com.android.systemui.qs.tiles.RRTile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -423,12 +425,16 @@ public class QSTileHost implements QSTile.Host {
                 return new PowerMenuTile(this);
             case QSConstants.TILE_REBOOT:
                 return new RebootTile(this);
+            case QSConstants.TILE_TRDS:
+                return new TrdsTile(this);	
             case QSConstants.TILE_SYSTEMUI_RESTART:
                 return new SystemUIRestartTile(this);
             case QSConstants.TILE_SLIM_FLOATS:
                 return new SlimFloatsTile(this);
             case QSConstants.TILE_THEMES:
                 return new ThemesTile(this);
+            case QSConstants.TILE_CONFIGURATIONS:
+                return new RRTile(this);
             default:
                 throw new IllegalArgumentException("Bad tile spec: " + tileSpec);
         }
